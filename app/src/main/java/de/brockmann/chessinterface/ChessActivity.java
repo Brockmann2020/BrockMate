@@ -37,7 +37,11 @@ public abstract class ChessActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.chess_activity);
+        int layoutId = getContentLayoutId();
+        if (layoutId == 0) {
+            layoutId = R.layout.chess_activity;
+        }
+        setContentView(layoutId);
 
         chessBoardGrid = findViewById(R.id.chess_board_grid);
 
