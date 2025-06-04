@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Top-Bar -->
+    <LinearLayout
+        android:id="@+id/top_bar_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="#E0E0E0"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tv_opponent_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Player 2 (Black)"
+            android:textSize="16sp"
+            android:gravity="start|center_vertical"/>
+
+        <ImageView
+            android:id="@+id/iv_menu_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_menu_more"
+            android:contentDescription="Menu"
+            android:padding="4dp"/>
+    </LinearLayout>
+
+    <!-- Quadratisches Brett -->
+    <GridLayout
+        android:id="@+id/chess_board_grid"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:columnCount="8"
+        android:rowCount="8"
+        android:alignmentMode="alignMargins"
+        app:layout_constraintTop_toBottomOf="@id/top_bar_layout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        android:layout_margin="8dp"/>
+
+    <!-- Bottom-Bar -->
+    <LinearLayout
+        android:id="@+id/bottom_bar_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="#E0E0E0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <Button
+            android:id="@+id/btn_offer_draw"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Draw"/>
+
+        <Button
+            android:id="@+id/btn_resign_game"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Resign"/>
+    </LinearLayout>
+</merge>
