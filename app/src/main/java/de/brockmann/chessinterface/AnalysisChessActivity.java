@@ -6,7 +6,7 @@ public class AnalysisChessActivity extends ChessActivity {
 
     @Override
     protected int getContentLayoutId() {
-        return 0;
+        return R.layout.chess_activity;
     }
 
     @Override

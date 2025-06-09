@@ -1,7 +1,10 @@
 package de.brockmann.chessinterface;
 
+import static de.brockmann.chessinterface.MenuLocalActivity.EXTRA_TIME_CONTROL;
+
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.view.View;
 import android.widget.TextView;
 
 import java.util.Locale;
@@ -21,7 +24,40 @@ public class LocalChessActivity extends ChessActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // 1. TimeControl-String holen
+        String tc = getIntent().getStringExtra(EXTRA_TIME_CONTROL);
+        long initialMillis = parseTimeControlToMillis(tc);
 
+        // 2. Referenzen zu den beiden Clock-Includes
+        View topInclude    = findViewById(R.id.clock_top);
+        View bottomInclude = findViewById(R.id.clock_bottom);
+
+        // 3. TextViews innerhalb der Inkludes (ID aus view_player_clock.xml)
+        TextView tvTop    = topInclude   .findViewById(R.id.tv_clock_time);
+        TextView tvBottom = bottomInclude.findViewById(R.id.tv_clock_time);
+
+        // 4. Starttext setzen
+        String fmt = formatMillis(initialMillis);
+        tvTop   .setText(fmt);
+        tvBottom.setText(fmt);
+
+        // 5. Timer starten (wenn nötig)
+        createTimer(initialMillis, tvTop)   .start();
+        createTimer(initialMillis, tvBottom).start();
+    }
+
+    // Converts "M+I" (e.g. "5+0") to milliseconds
+    private long parseTimeControlToMillis(String tc) {
+        String[] parts = tc.split("\\+");
+        int minutes = Integer.parseInt(parts[0]);
+        return minutes * 60L * 1000;
+    }
+
+    // Formats ms to "MM:SS"
+    private String formatMillis(long ms) {
+        long m = (ms/1000) / 60;
+        long s = (ms/1000) % 60;
+        return String.format(Locale.getDefault(), "%02d:%02d", m, s);
     }
 
     private CountDownTimer createTimer(long millis, TextView tgt) {
