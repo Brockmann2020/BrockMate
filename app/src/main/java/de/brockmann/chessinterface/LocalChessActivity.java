@@ -21,21 +21,7 @@ public class LocalChessActivity extends ChessActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        /*// Referenzen holen
-        clockBlack = findViewById(R.id.clock_top)
-                .findViewById(R.id.tv_clock_time);
-        clockWhite = findViewById(R.id.clock_bottom)
-                .findViewById(R.id.tv_clock_time);
 
-        // Beispiel: beide Uhren mit 5 Minuten starten
-        long startMillis = 5 * 60 * 1000;
-        CountDownTimer whiteTimer = createTimer(startMillis, clockWhite);
-        CountDownTimer blackTimer = createTimer(startMillis, clockBlack);
-
-        // starte Weiß
-        whiteTimer.start();*/
-
-        // TODO: beim Spielerzug Timer wechseln
     }
 
     private CountDownTimer createTimer(long millis, TextView tgt) {
