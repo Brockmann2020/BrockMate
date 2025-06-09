@@ -6,8 +6,6 @@ import android.widget.TextView;
 
 import java.util.Locale;
 
-import de.brockmann.chessinterface.ChessActivity;
-
 public class LocalChessActivity extends ChessActivity {
 
     /*private ChronometerView clockWhite;
@@ -16,7 +14,7 @@ public class LocalChessActivity extends ChessActivity {
 
     @Override
     protected int getContentLayoutId() {
-        return R.layout.local_chess_activity;
+        return R.layout.chess_local_activity;
     }
 
     @Override

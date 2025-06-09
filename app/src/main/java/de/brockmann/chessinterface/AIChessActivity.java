@@ -9,7 +9,7 @@ public class AIChessActivity extends ChessActivity {
     @Override
     protected int getContentLayoutId() {
         // no additional UI elements for now
-        return 0;
+        return R.layout.chess_ai_activity;
     }
 
     @Override
