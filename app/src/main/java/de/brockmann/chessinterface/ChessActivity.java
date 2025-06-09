@@ -199,6 +199,16 @@ public abstract class ChessActivity extends AppCompatActivity {
         FrameLayout sourceCell = (FrameLayout) chessBoardGrid.getChildAt(from);
         FrameLayout targetCell = (FrameLayout) chessBoardGrid.getChildAt(to);
 
+        // Detect and perform En Passant
+        if (currentBoardState[from].equalsIgnoreCase("p") &&
+                currentBoardState[to].equals(" ") &&
+                enPassantTarget != -1 &&
+                Math.abs(enPassantTarget - to) == 8
+        ) {
+            FrameLayout enPassantTargetCell = (FrameLayout) chessBoardGrid.getChildAt(enPassantTarget);
+            enPassantTargetCell.removeAllViews();
+        }
+
         sourceCell.removeView(pieceView);
         if (targetCell.getChildCount() > 0) {
             targetCell.removeAllViews();
@@ -210,7 +220,7 @@ public abstract class ChessActivity extends AppCompatActivity {
         currentBoardState[to] = piece;
         currentBoardState[from] = " ";
 
-        // En Passant
+        // En Passant possible in next move
         if (piece.equalsIgnoreCase("p") && Math.abs(to - from) == 16) {
             enPassantTarget = to;
         }
@@ -289,7 +299,7 @@ public abstract class ChessActivity extends AppCompatActivity {
         char pieceType = Character.toLowerCase(pieceCode.charAt(0));
 
         switch (pieceType) {
-            case 'p': return isPawnMoveValid(startRow, startCol, endRow, endCol, getPieceColor(pieceCode.charAt(0)), targetCode);
+            case 'p': return isPawnMoveValid(startRow, startCol, endRow, endCol, endPos, getPieceColor(pieceCode.charAt(0)), targetCode);
             case 'r': return isRookMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
             case 'n': return isKnightMoveValid(startRow, startCol, endRow, endCol);
             case 'b': return isBishopMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
@@ -305,23 +315,23 @@ public abstract class ChessActivity extends AppCompatActivity {
         return ' ';
     }
 
-    private boolean isPawnMoveValid(int startRow, int startCol, int endRow, int endCol, char color, String targetCode) {
+    private boolean isPawnMoveValid(int startRow, int startCol, int endRow, int endCol, int endPos, char color, String targetCode) {
         int rowDiff = endRow - startRow;
         int colDiff = endCol - startCol;
 
         if (color == 'W') {
             if (rowDiff == -1 && colDiff == 0 && " ".equals(targetCode)) return true;
             if (startRow == 6 && rowDiff == -2 && colDiff == 0 && " ".equals(targetCode)) return true;
+            if (rowDiff == -1 && Math.abs(colDiff) == 1 && enPassantTarget == endPos+8 && " ".equals(targetCode)) return true;
             return rowDiff == -1 && Math.abs(colDiff) == 1 && !" ".equals(targetCode);
         } else {
             if (rowDiff == 1 && colDiff == 0 && " ".equals(targetCode)) return true;
-            if (startRow == 1 && rowDiff == 2 && colDiff == 0 && " ".equals(targetCode)) return true;
+            if (startRow == 1 && rowDiff == 2 && colDiff == 0 && " ".equals(targetCode) ) return true;
+            if (rowDiff == 1 && Math.abs(colDiff) == 1 && enPassantTarget == endPos-8 && " ".equals(targetCode)) return true;
             return rowDiff == 1 && Math.abs(colDiff) == 1 && !" ".equals(targetCode);
         }
 
-        /*if (enPassantTarget != -1) {
-
-        }*/
+        //&& " ".equals(currentBoardState[(startRow + 1) * 8 + startCol])
 
     }
 
