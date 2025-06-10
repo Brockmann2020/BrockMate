@@ -434,8 +434,7 @@ public abstract class ChessActivity extends AppCompatActivity {
                 char enemy = 'B';
                 if (isSquareAttacked(currentBoardState, startPos, enemy)) return false;
                 if (isSquareAttacked(currentBoardState, startPos+1, enemy)) return false;
-                if (isSquareAttacked(currentBoardState, startPos+2, enemy)) return false;
-                return true;
+                return !isSquareAttacked(currentBoardState, startPos + 2, enemy);
             } else if (endCol == 2) { // queenside
                 if (whiteQueensideRookMoved) return false;
                 if (!"R".equals(currentBoardState[56])) return false;
@@ -443,8 +442,7 @@ public abstract class ChessActivity extends AppCompatActivity {
                 char enemy = 'B';
                 if (isSquareAttacked(currentBoardState, startPos, enemy)) return false;
                 if (isSquareAttacked(currentBoardState, startPos-1, enemy)) return false;
-                if (isSquareAttacked(currentBoardState, startPos-2, enemy)) return false;
-                return true;
+                return !isSquareAttacked(currentBoardState, startPos - 2, enemy);
             }
         } else {
             if (blackKingMoved) return false;
@@ -455,8 +453,7 @@ public abstract class ChessActivity extends AppCompatActivity {
                 char enemy = 'W';
                 if (isSquareAttacked(currentBoardState, startPos, enemy)) return false;
                 if (isSquareAttacked(currentBoardState, startPos+1, enemy)) return false;
-                if (isSquareAttacked(currentBoardState, startPos+2, enemy)) return false;
-                return true;
+                return !isSquareAttacked(currentBoardState, startPos + 2, enemy);
             } else if (endCol == 2) {
                 if (blackQueensideRookMoved) return false;
                 if (!"r".equals(currentBoardState[0])) return false;
@@ -464,8 +461,7 @@ public abstract class ChessActivity extends AppCompatActivity {
                 char enemy = 'W';
                 if (isSquareAttacked(currentBoardState, startPos, enemy)) return false;
                 if (isSquareAttacked(currentBoardState, startPos-1, enemy)) return false;
-                if (isSquareAttacked(currentBoardState, startPos-2, enemy)) return false;
-                return true;
+                return !isSquareAttacked(currentBoardState, startPos - 2, enemy);
             }
         }
         return false;
