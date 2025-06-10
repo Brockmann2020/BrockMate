@@ -43,6 +43,14 @@ public abstract class ChessActivity extends AppCompatActivity {
 
     private int enPassantTarget = -1;
 
+    // Castling state
+    private boolean whiteKingMoved = false;
+    private boolean blackKingMoved = false;
+    private boolean whiteKingsideRookMoved = false;
+    private boolean whiteQueensideRookMoved = false;
+    private boolean blackKingsideRookMoved = false;
+    private boolean blackQueensideRookMoved = false;
+
     @LayoutRes
     protected abstract int getContentLayoutId();
 
@@ -71,6 +79,12 @@ public abstract class ChessActivity extends AppCompatActivity {
         currentPlayerTurn = 'W';
         isBoardFlipped = false; // Brett startet immer normal
         enPassantTarget = -1;
+        whiteKingMoved = false;
+        blackKingMoved = false;
+        whiteKingsideRookMoved = false;
+        whiteQueensideRookMoved = false;
+        blackKingsideRookMoved = false;
+        blackQueensideRookMoved = false;
         Toast.makeText(this, "White's turn", Toast.LENGTH_SHORT).show();
 
         setupBoardCells();
@@ -217,8 +231,47 @@ public abstract class ChessActivity extends AppCompatActivity {
 
         // Internen Zustand aktualisieren
         String piece = currentBoardState[from];
+
+        // Handle castling rook movement
+        if (piece.equalsIgnoreCase("k") && Math.abs(to - from) == 2) {
+            boolean kingside = to > from;
+            int rookFrom = kingside ? from + 3 : from - 4;
+            int rookTo = kingside ? from + 1 : from - 1;
+
+            FrameLayout rookSource = (FrameLayout) chessBoardGrid.getChildAt(rookFrom);
+            FrameLayout rookTarget = (FrameLayout) chessBoardGrid.getChildAt(rookTo);
+            if (rookSource.getChildCount() > 0) {
+                ImageView rookView = (ImageView) rookSource.getChildAt(0);
+                rookSource.removeView(rookView);
+                if (rookTarget.getChildCount() > 0) rookTarget.removeAllViews();
+                rookTarget.addView(rookView);
+            }
+
+            currentBoardState[rookTo] = currentBoardState[rookFrom];
+            currentBoardState[rookFrom] = " ";
+
+            // update rook moved flags
+            if (piece.equals("K")) {
+                if (kingside) whiteKingsideRookMoved = true; else whiteQueensideRookMoved = true;
+            } else if (piece.equals("k")) {
+                if (kingside) blackKingsideRookMoved = true; else blackQueensideRookMoved = true;
+            }
+        }
+
         currentBoardState[to] = piece;
         currentBoardState[from] = " ";
+
+        // update moved flags
+        if (piece.equals("K")) whiteKingMoved = true;
+        if (piece.equals("k")) blackKingMoved = true;
+        if (piece.equals("R")) {
+            if (from == 56) whiteQueensideRookMoved = true;
+            if (from == 63) whiteKingsideRookMoved = true;
+        }
+        if (piece.equals("r")) {
+            if (from == 0) blackQueensideRookMoved = true;
+            if (from == 7) blackKingsideRookMoved = true;
+        }
 
         // En Passant possible in next move
         if (piece.equalsIgnoreCase("p") && Math.abs(to - from) == 16) {
@@ -303,8 +356,14 @@ public abstract class ChessActivity extends AppCompatActivity {
             case 'r': return isRookMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
             case 'n': return isKnightMoveValid(startRow, startCol, endRow, endCol);
             case 'b': return isBishopMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
-            case 'q': return (isRookMoveValid(startRow, startCol, endRow, endCol) || isBishopMoveValid(startRow, startCol, endRow, endCol)) && isPathClear(startPos, endPos);
-            case 'k': return isKingMoveValid(startRow, startCol, endRow, endCol);
+            case 'q':
+                return (isRookMoveValid(startRow, startCol, endRow, endCol) ||
+                        isBishopMoveValid(startRow, startCol, endRow, endCol)) &&
+                        isPathClear(startPos, endPos);
+            case 'k':
+                char color = getPieceColor(pieceCode.charAt(0));
+                if (isCastlingMove(startRow, startCol, endRow, endCol, color)) return true;
+                return isKingMoveValid(startRow, startCol, endRow, endCol);
             default: return false;
         }
     }
@@ -347,6 +406,42 @@ public abstract class ChessActivity extends AppCompatActivity {
 
     private boolean isBishopMoveValid(int startRow, int startCol, int endRow, int endCol) {
         return Math.abs(startRow - endRow) == Math.abs(startCol - endCol);
+    }
+
+    private boolean isCastlingMove(int startRow, int startCol, int endRow, int endCol, char color) {
+        if (startRow != endRow) return false;
+        if (Math.abs(endCol - startCol) != 2) return false;
+
+        int kingStartRow = (color == 'W') ? 7 : 0;
+        int kingStartCol = 4;
+        if (startRow != kingStartRow || startCol != kingStartCol) return false;
+
+        int startPos = startRow * BOARD_SIZE + startCol;
+
+        if (color == 'W') {
+            if (whiteKingMoved) return false;
+            if (endCol == 6) { // kingside
+                if (whiteKingsideRookMoved) return false;
+                if (!"R".equals(currentBoardState[63])) return false;
+                return isPathClear(startPos, 63);
+            } else if (endCol == 2) { // queenside
+                if (whiteQueensideRookMoved) return false;
+                if (!"R".equals(currentBoardState[56])) return false;
+                return isPathClear(startPos, 56);
+            }
+        } else {
+            if (blackKingMoved) return false;
+            if (endCol == 6) {
+                if (blackKingsideRookMoved) return false;
+                if (!"r".equals(currentBoardState[7])) return false;
+                return isPathClear(startPos, 7);
+            } else if (endCol == 2) {
+                if (blackQueensideRookMoved) return false;
+                if (!"r".equals(currentBoardState[0])) return false;
+                return isPathClear(startPos, 0);
+            }
+        }
+        return false;
     }
 
     private boolean isKingMoveValid(int startRow, int startCol, int endRow, int endCol) {
