@@ -280,6 +280,7 @@ public abstract class ChessActivity extends AppCompatActivity {
 
         // Spieler wechseln
         switchTurn();
+        checkGameState();
     }
 
     // --- NEUE METHODE: Wechselt den Spieler und löst ggf. die Spiegelung aus ---
@@ -325,8 +326,15 @@ public abstract class ChessActivity extends AppCompatActivity {
     }
 
 
-    // --- GEÄNDERT: Zugvalidierung prüft jetzt auch den Spieler ---
+    // --- Zugvalidierung: prüft zunächst pseudolegal und danach, ob der eigene
+    // König im Schach bleiben würde ---
     private boolean isMoveValid(int startPos, int endPos) {
+        if (!isPseudoLegalMove(startPos, endPos)) return false;
+        return !wouldLeaveKingInCheck(startPos, endPos);
+    }
+
+    // Pseudolegale Zugvalidierung ohne Berücksichtigung von Schach
+    private boolean isPseudoLegalMove(int startPos, int endPos) {
         if (startPos == endPos) return false;
 
         String pieceCode = currentBoardState[startPos];
@@ -334,12 +342,10 @@ public abstract class ChessActivity extends AppCompatActivity {
 
         if (" ".equals(pieceCode)) return false;
 
-        // PRÜFUNG 1: Ist der richtige Spieler am Zug?
         if (getPieceColor(pieceCode.charAt(0)) != currentPlayerTurn) {
             return false;
         }
 
-        // PRÜFUNG 2: Wird eine eigene Figur geschlagen?
         if (!" ".equals(targetCode) && getPieceColor(pieceCode.charAt(0)) == getPieceColor(targetCode.charAt(0))) {
             return false;
         }
@@ -352,18 +358,23 @@ public abstract class ChessActivity extends AppCompatActivity {
         char pieceType = Character.toLowerCase(pieceCode.charAt(0));
 
         switch (pieceType) {
-            case 'p': return isPawnMoveValid(startRow, startCol, endRow, endCol, endPos, getPieceColor(pieceCode.charAt(0)), targetCode);
-            case 'r': return isRookMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
-            case 'n': return isKnightMoveValid(startRow, startCol, endRow, endCol);
-            case 'b': return isBishopMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
-            case 'q': return (
-                        isRookMoveValid(startRow, startCol, endRow, endCol) ||
+            case 'p':
+                return isPawnMoveValid(startRow, startCol, endRow, endCol, endPos, getPieceColor(pieceCode.charAt(0)), targetCode);
+            case 'r':
+                return isRookMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
+            case 'n':
+                return isKnightMoveValid(startRow, startCol, endRow, endCol);
+            case 'b':
+                return isBishopMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
+            case 'q':
+                return (isRookMoveValid(startRow, startCol, endRow, endCol) ||
                         isBishopMoveValid(startRow, startCol, endRow, endCol)) &&
                         isPathClear(startPos, endPos);
-            case 'k': return
-                        isCastlingMove(startRow, startCol, endRow, endCol, getPieceColor(pieceCode.charAt(0))) ||
+            case 'k':
+                return isCastlingMove(startRow, startCol, endRow, endCol, getPieceColor(pieceCode.charAt(0))) ||
                         isKingMoveValid(startRow, startCol, endRow, endCol);
-            default: return false;
+            default:
+                return false;
         }
     }
 
@@ -419,22 +430,42 @@ public abstract class ChessActivity extends AppCompatActivity {
             if (endCol == 6) { // kingside
                 if (whiteKingsideRookMoved) return false;
                 if (!"R".equals(currentBoardState[63])) return false;
-                return isPathClear(startPos, 63);
+                if (!isPathClear(startPos, 63)) return false;
+                char enemy = 'B';
+                if (isSquareAttacked(currentBoardState, startPos, enemy)) return false;
+                if (isSquareAttacked(currentBoardState, startPos+1, enemy)) return false;
+                if (isSquareAttacked(currentBoardState, startPos+2, enemy)) return false;
+                return true;
             } else if (endCol == 2) { // queenside
                 if (whiteQueensideRookMoved) return false;
                 if (!"R".equals(currentBoardState[56])) return false;
-                return isPathClear(startPos, 56);
+                if (!isPathClear(startPos, 56)) return false;
+                char enemy = 'B';
+                if (isSquareAttacked(currentBoardState, startPos, enemy)) return false;
+                if (isSquareAttacked(currentBoardState, startPos-1, enemy)) return false;
+                if (isSquareAttacked(currentBoardState, startPos-2, enemy)) return false;
+                return true;
             }
         } else {
             if (blackKingMoved) return false;
             if (endCol == 6) {
                 if (blackKingsideRookMoved) return false;
                 if (!"r".equals(currentBoardState[7])) return false;
-                return isPathClear(startPos, 7);
+                if (!isPathClear(startPos, 7)) return false;
+                char enemy = 'W';
+                if (isSquareAttacked(currentBoardState, startPos, enemy)) return false;
+                if (isSquareAttacked(currentBoardState, startPos+1, enemy)) return false;
+                if (isSquareAttacked(currentBoardState, startPos+2, enemy)) return false;
+                return true;
             } else if (endCol == 2) {
                 if (blackQueensideRookMoved) return false;
                 if (!"r".equals(currentBoardState[0])) return false;
-                return isPathClear(startPos, 0);
+                if (!isPathClear(startPos, 0)) return false;
+                char enemy = 'W';
+                if (isSquareAttacked(currentBoardState, startPos, enemy)) return false;
+                if (isSquareAttacked(currentBoardState, startPos-1, enemy)) return false;
+                if (isSquareAttacked(currentBoardState, startPos-2, enemy)) return false;
+                return true;
             }
         }
         return false;
@@ -460,6 +491,117 @@ public abstract class ChessActivity extends AppCompatActivity {
             currentPos += rowStep * BOARD_SIZE + colStep;
         }
         return true;
+    }
+
+    // Prüft, ob das Feld 'pos' von der Farbe 'byColor' angegriffen wird
+    private boolean isSquareAttacked(String[] board, int pos, char byColor) {
+        int row = pos / BOARD_SIZE;
+        int col = pos % BOARD_SIZE;
+
+        int pawnRow = row + (byColor == 'W' ? 1 : -1);
+        if (pawnRow >= 0 && pawnRow < BOARD_SIZE) {
+            String pawn = byColor == 'W' ? "P" : "p";
+            if (col - 1 >= 0 && pawn.equals(board[pawnRow * BOARD_SIZE + (col - 1)])) return true;
+            if (col + 1 < BOARD_SIZE && pawn.equals(board[pawnRow * BOARD_SIZE + (col + 1)])) return true;
+        }
+
+        int[][] knightMoves = { {1,2}, {2,1}, {-1,2}, {-2,1}, {1,-2}, {2,-1}, {-1,-2}, {-2,-1} };
+        for (int[] m : knightMoves) {
+            int r = row + m[0];
+            int c = col + m[1];
+            if (r>=0 && r<BOARD_SIZE && c>=0 && c<BOARD_SIZE) {
+                String p = board[r*BOARD_SIZE+c];
+                if ((byColor=='W' && "N".equals(p)) || (byColor=='B' && "n".equals(p))) return true;
+            }
+        }
+
+        int[][] directions = { {1,0}, {-1,0}, {0,1}, {0,-1}, {1,1}, {1,-1}, {-1,1}, {-1,-1} };
+        for (int i=0;i<directions.length;i++) {
+            int[] d = directions[i];
+            int r=row+d[0];
+            int c=col+d[1];
+            while (r>=0 && r<BOARD_SIZE && c>=0 && c<BOARD_SIZE) {
+                String p = board[r*BOARD_SIZE+c];
+                if (!" ".equals(p)) {
+                    char pc = p.charAt(0);
+                    if (byColor=='W' && Character.isUpperCase(pc) || byColor=='B' && Character.isLowerCase(pc)) {
+                        char t = Character.toLowerCase(pc);
+                        if ((i<4 && (t=='r' || t=='q')) || (i>=4 && (t=='b' || t=='q'))) return true;
+                        if (t=='k' && Math.max(Math.abs(r-row),Math.abs(c-col))==1) return true;
+                    }
+                    break;
+                }
+                r+=d[0];
+                c+=d[1];
+            }
+        }
+        return false;
+    }
+
+    private boolean isKingInCheck(char color, String[] board) {
+        char kingChar = (color=='W') ? 'K' : 'k';
+        int kingPos = -1;
+        for (int i=0;i<board.length;i++) {
+            if (kingChar==board[i].charAt(0)) { kingPos=i; break; }
+        }
+        if (kingPos==-1) return false;
+        char enemy = (color=='W') ? 'B' : 'W';
+        return isSquareAttacked(board, kingPos, enemy);
+    }
+
+    private String[] makeMoveCopy(int from, int to) {
+        String[] copy = currentBoardState.clone();
+        String piece = copy[from];
+        copy[from] = " ";
+        // en passant capture
+        if (piece.equalsIgnoreCase("p") && from%8!=to%8 && " ".equals(copy[to])) {
+            int cap = (piece.equals("P")) ? to+8 : to-8;
+            if (cap>=0 && cap<64) copy[cap]=" ";
+        }
+        copy[to] = piece;
+        if (piece.equalsIgnoreCase("k") && Math.abs(to-from)==2) {
+            boolean ks = to>from;
+            int rookFrom = ks ? from+3 : from-4;
+            int rookTo   = ks ? from+1 : from-1;
+            copy[rookTo] = copy[rookFrom];
+            copy[rookFrom] = " ";
+        }
+        return copy;
+    }
+
+    private boolean wouldLeaveKingInCheck(int from, int to) {
+        String[] copy = makeMoveCopy(from, to);
+        char color = getPieceColor(currentBoardState[from].charAt(0));
+        return isKingInCheck(color, copy);
+    }
+
+    private boolean hasAnyLegalMove(char player) {
+        char save = currentPlayerTurn;
+        currentPlayerTurn = player;
+        for (int i=0;i<64;i++) {
+            if (!" ".equals(currentBoardState[i]) && getPieceColor(currentBoardState[i].charAt(0))==player) {
+                for (int j=0;j<64;j++) {
+                    if (isMoveValid(i,j)) { currentPlayerTurn=save; return true; }
+                }
+            }
+        }
+        currentPlayerTurn = save;
+        return false;
+    }
+
+    private void checkGameState() {
+        char player = currentPlayerTurn;
+        boolean inCheck = isKingInCheck(player, currentBoardState);
+        boolean hasMove = hasAnyLegalMove(player);
+        if (!hasMove) {
+            if (inCheck) {
+                Toast.makeText(this, "Checkmate!", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Stalemate!", Toast.LENGTH_LONG).show();
+            }
+        } else if (inCheck) {
+            Toast.makeText(this, "Check!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupDummyButtons() {
