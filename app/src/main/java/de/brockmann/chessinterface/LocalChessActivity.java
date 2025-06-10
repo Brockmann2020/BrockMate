@@ -36,21 +36,34 @@ public class LocalChessActivity extends ChessActivity {
         TextView tvTop    = topInclude   .findViewById(R.id.tv_clock_time);
         TextView tvBottom = bottomInclude.findViewById(R.id.tv_clock_time);
 
-        // 4. Starttext setzen
-        String fmt = formatMillis(initialMillis);
-        tvTop   .setText(fmt);
-        tvBottom.setText(fmt);
+        // 4. Starttext setzen bzw. "keine Zeitkontrolle"
+        if (initialMillis < 0) {
+            tvTop.setText("-:--");
+            tvBottom.setText("-:--");
+        } else {
+            String fmt = formatMillis(initialMillis);
+            tvTop.setText(fmt);
+            tvBottom.setText(fmt);
 
-        // 5. Timer starten (wenn nötig)
-        createTimer(initialMillis, tvTop)   .start();
-        createTimer(initialMillis, tvBottom).start();
+            // 5. Timer starten (wenn nötig)
+            createTimer(initialMillis, tvTop).start();
+            createTimer(initialMillis, tvBottom).start();
+        }
     }
 
-    // Converts "M+I" (e.g. "5+0") to milliseconds
+    // Converts a time control like "M" or "M|I"/"M+I" to milliseconds
     private long parseTimeControlToMillis(String tc) {
-        String[] parts = tc.split("\\+");
-        int minutes = Integer.parseInt(parts[0]);
-        return minutes * 60L * 1000;
+        if ("Keine Zeitkontrolle".equals(tc)) {
+            return -1L;
+        }
+
+        String[] parts = tc.split("[+|]");
+        try {
+            int minutes = Integer.parseInt(parts[0]);
+            return minutes * 60L * 1000;
+        } catch (NumberFormatException e) {
+            return -1L;
+        }
     }
 
     // Formats ms to "MM:SS"
