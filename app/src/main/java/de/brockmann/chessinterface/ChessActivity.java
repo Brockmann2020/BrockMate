@@ -356,14 +356,13 @@ public abstract class ChessActivity extends AppCompatActivity {
             case 'r': return isRookMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
             case 'n': return isKnightMoveValid(startRow, startCol, endRow, endCol);
             case 'b': return isBishopMoveValid(startRow, startCol, endRow, endCol) && isPathClear(startPos, endPos);
-            case 'q':
-                return (isRookMoveValid(startRow, startCol, endRow, endCol) ||
+            case 'q': return (
+                        isRookMoveValid(startRow, startCol, endRow, endCol) ||
                         isBishopMoveValid(startRow, startCol, endRow, endCol)) &&
                         isPathClear(startPos, endPos);
-            case 'k':
-                char color = getPieceColor(pieceCode.charAt(0));
-                if (isCastlingMove(startRow, startCol, endRow, endCol, color)) return true;
-                return isKingMoveValid(startRow, startCol, endRow, endCol);
+            case 'k': return
+                        isCastlingMove(startRow, startCol, endRow, endCol, getPieceColor(pieceCode.charAt(0))) ||
+                        isKingMoveValid(startRow, startCol, endRow, endCol);
             default: return false;
         }
     }
@@ -389,9 +388,6 @@ public abstract class ChessActivity extends AppCompatActivity {
             if (rowDiff == 1 && Math.abs(colDiff) == 1 && enPassantTarget == endPos-8 && " ".equals(targetCode)) return true;
             return rowDiff == 1 && Math.abs(colDiff) == 1 && !" ".equals(targetCode);
         }
-
-        //&& " ".equals(currentBoardState[(startRow + 1) * 8 + startCol])
-
     }
 
     private boolean isRookMoveValid(int startRow, int startCol, int endRow, int endCol) {
