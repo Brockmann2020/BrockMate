@@ -14,4 +14,9 @@ public class AnalysisChessActivity extends ChessActivity {
         super.onCreate(savedInstanceState);
         // nothing else for now – same UI & logic as ChessActivity
     }
+
+    @Override
+    protected void switchPlayer() {
+
+    }
 }

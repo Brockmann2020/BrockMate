@@ -7,7 +7,7 @@ import android.widget.ImageView;
 /**
  * Chess activity against the Stockfish engine.
  */
-public class AIChessActivity extends ChessActivity {
+public abstract class AIChessActivity extends ChessActivity {
 
     private StockfishClient engine;
     private int aiStrength;
