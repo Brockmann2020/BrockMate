@@ -51,6 +51,10 @@ public abstract class ChessActivity extends AppCompatActivity {
     private boolean blackKingsideRookMoved = false;
     private boolean blackQueensideRookMoved = false;
 
+    // Draw detection state
+    private int halfmoveClock = 0;
+    private final java.util.Map<String, Integer> positionCount = new java.util.HashMap<>();
+
     @LayoutRes
     protected abstract int getContentLayoutId();
 
@@ -85,10 +89,13 @@ public abstract class ChessActivity extends AppCompatActivity {
         whiteQueensideRookMoved = false;
         blackKingsideRookMoved = false;
         blackQueensideRookMoved = false;
+        halfmoveClock = 0;
+        positionCount.clear();
         Toast.makeText(this, "White's turn", Toast.LENGTH_SHORT).show();
 
         setupBoardCells();
         placePiecesOnBoard();
+        recordCurrentPosition();
     }
 
     private void setupBoardCells() {
@@ -213,14 +220,18 @@ public abstract class ChessActivity extends AppCompatActivity {
         FrameLayout sourceCell = (FrameLayout) chessBoardGrid.getChildAt(from);
         FrameLayout targetCell = (FrameLayout) chessBoardGrid.getChildAt(to);
 
+        String piece = currentBoardState[from];
+        String targetBefore = currentBoardState[to];
+        boolean enPassantCapture = false;
         // Detect and perform En Passant
-        if (currentBoardState[from].equalsIgnoreCase("p") &&
-                currentBoardState[to].equals(" ") &&
+        if (piece.equalsIgnoreCase("p") &&
+                " ".equals(targetBefore) &&
                 enPassantTarget != -1 &&
                 Math.abs(enPassantTarget - to) == 8
         ) {
             FrameLayout enPassantTargetCell = (FrameLayout) chessBoardGrid.getChildAt(enPassantTarget);
             enPassantTargetCell.removeAllViews();
+            enPassantCapture = true;
         }
 
         sourceCell.removeView(pieceView);
@@ -230,7 +241,6 @@ public abstract class ChessActivity extends AppCompatActivity {
         targetCell.addView(pieceView);
 
         // Internen Zustand aktualisieren
-        String piece = currentBoardState[from];
 
         // Handle castling rook movement
         if (piece.equalsIgnoreCase("k") && Math.abs(to - from) == 2) {
@@ -260,6 +270,10 @@ public abstract class ChessActivity extends AppCompatActivity {
 
         currentBoardState[to] = piece;
         currentBoardState[from] = " ";
+        if (enPassantCapture) {
+            int capPos = piece.equals("P") ? to + 8 : to - 8;
+            if (capPos >= 0 && capPos < 64) currentBoardState[capPos] = " ";
+        }
 
         // update moved flags
         if (piece.equals("K")) whiteKingMoved = true;
@@ -274,8 +288,17 @@ public abstract class ChessActivity extends AppCompatActivity {
         }
 
         // En Passant possible in next move
+        enPassantTarget = -1;
         if (piece.equalsIgnoreCase("p") && Math.abs(to - from) == 16) {
             enPassantTarget = to;
+        }
+
+        boolean isPawnMove = piece.equalsIgnoreCase("p");
+        boolean isCapture = !" ".equals(targetBefore) || enPassantCapture;
+        if (isPawnMove || isCapture) {
+            halfmoveClock = 0;
+        } else {
+            halfmoveClock++;
         }
 
         // Spieler wechseln
@@ -586,6 +609,18 @@ public abstract class ChessActivity extends AppCompatActivity {
     }
 
     private void checkGameState() {
+        recordCurrentPosition();
+
+        if (halfmoveClock >= 100) {
+            Toast.makeText(this, "Draw by 50-move rule!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (positionCount.getOrDefault(getPositionKey(), 0) >= 3) {
+            Toast.makeText(this, "Draw by threefold repetition!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         char player = currentPlayerTurn;
         boolean inCheck = isKingInCheck(player, currentBoardState);
         boolean hasMove = hasAnyLegalMove(player);
@@ -644,5 +679,23 @@ public abstract class ChessActivity extends AppCompatActivity {
             case "K": return R.drawable.ic_king_white;
             default: return 0;
         }
+    }
+
+    // --- Helper methods for draw detection ---
+    private String getPositionKey() {
+        StringBuilder sb = new StringBuilder();
+        for (String s : currentBoardState) sb.append(s);
+        sb.append(currentPlayerTurn);
+        sb.append(whiteKingMoved).append(blackKingMoved);
+        sb.append(whiteKingsideRookMoved).append(whiteQueensideRookMoved);
+        sb.append(blackKingsideRookMoved).append(blackQueensideRookMoved);
+        sb.append(enPassantTarget);
+        return sb.toString();
+    }
+
+    private void recordCurrentPosition() {
+        String key = getPositionKey();
+        int c = positionCount.getOrDefault(key, 0) + 1;
+        positionCount.put(key, c);
     }
 }
