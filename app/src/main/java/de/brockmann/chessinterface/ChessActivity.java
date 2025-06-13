@@ -36,6 +36,9 @@ public abstract class ChessActivity extends AppCompatActivity {
 
     private String[] currentBoardState;
 
+    // track fullmove number for FEN generation
+    protected int fullmoveNumber = 1;
+
     // --- NEUE VARIABLEN FÜR SPIELZUSTAND ---
     protected char currentPlayerTurn; // 'W' für Weiß, 'B' für Schwarz
 
@@ -75,6 +78,7 @@ public abstract class ChessActivity extends AppCompatActivity {
         currentBoardState = initialBoardSetup.clone();
         // --- NEU: Startspieler festlegen ---
         currentPlayerTurn = 'W';
+        fullmoveNumber = 1;
         enPassantTarget = -1;
         whiteKingMoved = false;
         blackKingMoved = false;
@@ -208,7 +212,7 @@ public abstract class ChessActivity extends AppCompatActivity {
     }
 
     // --- NEUE METHODE: Führt den Zug aus und aktualisiert alles ---
-    private void performMove(int from, int to, ImageView pieceView) {
+    protected void performMove(int from, int to, ImageView pieceView) {
         // UI aktualisieren
         FrameLayout sourceCell = (FrameLayout) chessBoardGrid.getChildAt(from);
         FrameLayout targetCell = (FrameLayout) chessBoardGrid.getChildAt(to);
@@ -303,10 +307,64 @@ public abstract class ChessActivity extends AppCompatActivity {
     protected abstract void switchPlayer();
 
     protected void toggleCurrentPlayer() {
+        boolean wasBlack = currentPlayerTurn == 'B';
         currentPlayerTurn = (currentPlayerTurn == 'W') ? 'B' : 'W';
+        if (wasBlack && currentPlayerTurn == 'W') {
+            fullmoveNumber++;
+        }
         Toast.makeText(this,
                 (currentPlayerTurn == 'W' ? "White's" : "Black's") + " turn",
                 Toast.LENGTH_SHORT).show();
+    }
+
+    /** Returns the current board state as FEN string for the engine. */
+    protected String getFEN() {
+        StringBuilder sb = new StringBuilder();
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            int empty = 0;
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                String piece = currentBoardState[row * BOARD_SIZE + col];
+                if (" ".equals(piece)) {
+                    empty++;
+                } else {
+                    if (empty > 0) { sb.append(empty); empty = 0; }
+                    sb.append(piece);
+                }
+            }
+            if (empty > 0) sb.append(empty);
+            if (row < BOARD_SIZE - 1) sb.append('/');
+        }
+
+        sb.append(' ');
+        sb.append(currentPlayerTurn == 'W' ? 'w' : 'b');
+        sb.append(' ');
+
+        StringBuilder castling = new StringBuilder();
+        if (!whiteKingMoved && !whiteKingsideRookMoved && "R".equals(currentBoardState[63]))
+            castling.append('K');
+        if (!whiteKingMoved && !whiteQueensideRookMoved && "R".equals(currentBoardState[56]))
+            castling.append('Q');
+        if (!blackKingMoved && !blackKingsideRookMoved && "r".equals(currentBoardState[7]))
+            castling.append('k');
+        if (!blackKingMoved && !blackQueensideRookMoved && "r".equals(currentBoardState[0]))
+            castling.append('q');
+        sb.append(castling.length() == 0 ? "-" : castling.toString());
+        sb.append(' ');
+
+        if (enPassantTarget == -1) {
+            sb.append('-');
+        } else {
+            int r = enPassantTarget / BOARD_SIZE;
+            int c = enPassantTarget % BOARD_SIZE;
+            sb.append((char)('a' + c));
+            sb.append((char)('8' - r));
+        }
+
+        sb.append(' ');
+        sb.append(halfmoveClock);
+        sb.append(' ');
+        sb.append(fullmoveNumber);
+        return sb.toString();
     }
 
 
