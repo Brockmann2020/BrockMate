@@ -3,9 +3,12 @@ package de.brockmann.chessinterface;
 import static de.brockmann.chessinterface.MenuLocalActivity.EXTRA_TIME_CONTROL;
 
 import android.os.Bundle;
+import android.content.Intent;
 import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.FrameLayout;
 
 import java.util.Locale;
 
@@ -13,7 +16,9 @@ public class LocalChessActivity extends ChessActivity {
 
     /*private ChronometerView clockWhite;
     private ChronometerView clockBlack;*/
-    private boolean whiteToMove = true;
+
+    private String localPlayAction; // "flip_board" or "flip_pieces"
+    private boolean isBoardFlipped = false;
 
     @Override
     protected int getContentLayoutId() {
@@ -23,6 +28,10 @@ public class LocalChessActivity extends ChessActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // read how the board should be flipped
+        localPlayAction = getIntent().getStringExtra(MenuLocalActivity.EXTRA_LOCAL_ACTION);
+        isBoardFlipped = false;
 
         // 1. TimeControl-String holen
         String tc = getIntent().getStringExtra(EXTRA_TIME_CONTROL);
@@ -84,5 +93,40 @@ public class LocalChessActivity extends ChessActivity {
                 tgt.setText("00:00");
             }
         };
+    }
+
+    @Override
+    protected void switchPlayer() {
+        toggleCurrentPlayer();
+
+        if (localPlayAction != null) {
+            isBoardFlipped = !isBoardFlipped;
+            applyBoardOrientation();
+        }
+    }
+
+    private void applyBoardOrientation() {
+        if (localPlayAction == null) return;
+
+        chessBoardGrid.postDelayed(() -> {
+            if ("flip_board".equals(localPlayAction)) {
+                float rotation = isBoardFlipped ? 180f : 0f;
+                chessBoardGrid.setRotation(rotation);
+                for (int i = 0; i < chessBoardGrid.getChildCount(); i++) {
+                    FrameLayout cell = (FrameLayout) chessBoardGrid.getChildAt(i);
+                    if (cell.getChildCount() > 0) {
+                        cell.getChildAt(0).setRotation(rotation);
+                    }
+                }
+            } else if ("flip_pieces".equals(localPlayAction)) {
+                for (int i = 0; i < chessBoardGrid.getChildCount(); i++) {
+                    FrameLayout cell = (FrameLayout) chessBoardGrid.getChildAt(i);
+                    if (cell.getChildCount() > 0) {
+                        ImageView piece = (ImageView) cell.getChildAt(0);
+                        piece.setScaleY(isBoardFlipped ? -1f : 1f);
+                    }
+                }
+            }
+        }, 200);
     }
 }
