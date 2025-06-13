@@ -21,7 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public abstract class ChessActivity extends AppCompatActivity {
 
     private static final int BOARD_SIZE = 8;
-    private GridLayout chessBoardGrid;
+    protected GridLayout chessBoardGrid;
 
     private final String[] initialBoardSetup = {
             "r", "n", "b", "q", "k", "b", "n", "r",
@@ -37,9 +37,7 @@ public abstract class ChessActivity extends AppCompatActivity {
     private String[] currentBoardState;
 
     // --- NEUE VARIABLEN FÜR SPIELZUSTAND ---
-    private char currentPlayerTurn; // 'W' für Weiß, 'B' für Schwarz
-    private String localPlayAction; // Speichert "flip_board" oder "flip_pieces"
-    private boolean isBoardFlipped = false; // Zustand der Spiegelung
+    protected char currentPlayerTurn; // 'W' für Weiß, 'B' für Schwarz
 
     private int enPassantTarget = -1;
 
@@ -67,10 +65,6 @@ public abstract class ChessActivity extends AppCompatActivity {
         }
         setContentView(layoutId);
 
-        // --- NEU: Spielaktion aus Intent auslesen ---
-        Intent intent = getIntent();
-        localPlayAction = intent.getStringExtra(MenuLocalActivity.EXTRA_LOCAL_ACTION);
-
         chessBoardGrid = findViewById(R.id.chess_board_grid);
         setupDummyButtons();
 
@@ -81,7 +75,6 @@ public abstract class ChessActivity extends AppCompatActivity {
         currentBoardState = initialBoardSetup.clone();
         // --- NEU: Startspieler festlegen ---
         currentPlayerTurn = 'W';
-        isBoardFlipped = false; // Brett startet immer normal
         enPassantTarget = -1;
         whiteKingMoved = false;
         blackKingMoved = false;
@@ -302,50 +295,18 @@ public abstract class ChessActivity extends AppCompatActivity {
         }
 
         // Spieler wechseln
-        switchTurn();
+        switchPlayer();
         checkGameState();
     }
 
-    // --- NEUE METHODE: Wechselt den Spieler und löst ggf. die Spiegelung aus ---
-    private void switchTurn() {
+    // --- NEUE METHODE: Wechselt den Spieler. Weitere Aktionen übernimmt die Unterklasse ---
+    protected abstract void switchPlayer();
+
+    protected void toggleCurrentPlayer() {
         currentPlayerTurn = (currentPlayerTurn == 'W') ? 'B' : 'W';
-        Toast.makeText(this, (currentPlayerTurn == 'W' ? "White's" : "Black's") + " turn", Toast.LENGTH_SHORT).show();
-
-        // Nur spiegeln, wenn eine lokale Spielaktion ausgewählt wurde
-        if (localPlayAction != null) {
-            isBoardFlipped = !isBoardFlipped; // Zustand umkehren
-            applyBoardOrientation();
-        }
-    }
-
-    // --- NEUE METHODE: Wendet die visuelle Spiegelung/Rotation an ---
-    private void applyBoardOrientation() {
-        if (localPlayAction == null) return;
-
-        // Nach einer kleinen Verzögerung ausführen, damit der Zug erst sichtbar wird
-        chessBoardGrid.postDelayed(() -> {
-            if ("flip_board".equals(localPlayAction)) {
-                float rotation = isBoardFlipped ? 180f : 0f;
-                chessBoardGrid.setRotation(rotation);
-                // Jede einzelne Figur zurückdrehen, damit sie nicht auf dem Kopf steht
-                for (int i = 0; i < chessBoardGrid.getChildCount(); i++) {
-                    FrameLayout cell = (FrameLayout) chessBoardGrid.getChildAt(i);
-                    if (cell.getChildCount() > 0) {
-                        cell.getChildAt(0).setRotation(rotation);
-                    }
-                }
-            } else if ("flip_pieces".equals(localPlayAction)) {
-                // Tauscht die Figuren auf dem Brett, um die Perspektive zu wechseln
-                for (int i = 0; i < chessBoardGrid.getChildCount(); i++) {
-                    FrameLayout cell = (FrameLayout) chessBoardGrid.getChildAt(i);
-                    if (cell.getChildCount() > 0) {
-                        ImageView piece = (ImageView) cell.getChildAt(0);
-                        // flip texture by negating scaleX
-                        piece.setScaleY(isBoardFlipped ? -1f : 1f);  // mirror when flipped
-                    }
-                }
-            }
-        }, 200); // 200ms Verzögerung für einen flüssigeren Übergang
+        Toast.makeText(this,
+                (currentPlayerTurn == 'W' ? "White's" : "Black's") + " turn",
+                Toast.LENGTH_SHORT).show();
     }
 
 
