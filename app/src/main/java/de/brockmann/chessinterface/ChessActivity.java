@@ -25,6 +25,8 @@ public abstract class ChessActivity extends AppCompatActivity {
     protected GridLayout chessBoardGrid;
     private View gameEndOverlay;
     private TextView gameEndMessage;
+    private View drawOfferOverlay;
+    private View resignConfirmOverlay;
 
     private final String[] initialBoardSetup = {
             "r", "n", "b", "q", "k", "b", "n", "r",
@@ -73,6 +75,8 @@ public abstract class ChessActivity extends AppCompatActivity {
 
         chessBoardGrid = findViewById(R.id.chess_board_grid);
         gameEndOverlay = findViewById(R.id.game_end_overlay);
+        drawOfferOverlay = findViewById(R.id.draw_offer_overlay);
+        resignConfirmOverlay = findViewById(R.id.resign_confirm_overlay);
         if (gameEndOverlay != null) {
             gameEndMessage = gameEndOverlay.findViewById(R.id.tv_game_end_message);
             Button newGame = gameEndOverlay.findViewById(R.id.btn_new_game);
@@ -86,6 +90,27 @@ public abstract class ChessActivity extends AppCompatActivity {
                         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
                 finish();
             });
+        }
+
+        if (drawOfferOverlay != null) {
+            Button accept = drawOfferOverlay.findViewById(R.id.btn_accept_draw);
+            Button decline = drawOfferOverlay.findViewById(R.id.btn_decline_draw);
+            accept.setOnClickListener(v -> {
+                hideDrawOfferOverlay();
+                showGameEndOverlay("Draw agreed");
+            });
+            decline.setOnClickListener(v -> hideDrawOfferOverlay());
+        }
+
+        if (resignConfirmOverlay != null) {
+            Button yes = resignConfirmOverlay.findViewById(R.id.btn_resign_yes);
+            Button no = resignConfirmOverlay.findViewById(R.id.btn_resign_no);
+            yes.setOnClickListener(v -> {
+                hideResignConfirmOverlay();
+                String winner = currentPlayerTurn == 'W' ? "Black" : "White";
+                showGameEndOverlay(winner + " won by resignation");
+            });
+            no.setOnClickListener(v -> hideResignConfirmOverlay());
         }
         setupDummyButtons();
 
@@ -729,6 +754,30 @@ public abstract class ChessActivity extends AppCompatActivity {
     protected void hideGameEndOverlay() {
         if (gameEndOverlay != null) {
             gameEndOverlay.setVisibility(View.GONE);
+        }
+    }
+
+    protected void showDrawOfferOverlay() {
+        if (drawOfferOverlay != null) {
+            drawOfferOverlay.setVisibility(View.VISIBLE);
+        }
+    }
+
+    protected void hideDrawOfferOverlay() {
+        if (drawOfferOverlay != null) {
+            drawOfferOverlay.setVisibility(View.GONE);
+        }
+    }
+
+    protected void showResignConfirmOverlay() {
+        if (resignConfirmOverlay != null) {
+            resignConfirmOverlay.setVisibility(View.VISIBLE);
+        }
+    }
+
+    protected void hideResignConfirmOverlay() {
+        if (resignConfirmOverlay != null) {
+            resignConfirmOverlay.setVisibility(View.GONE);
         }
     }
 

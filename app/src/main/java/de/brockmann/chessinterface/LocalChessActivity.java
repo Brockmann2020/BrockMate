@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.ImageView;
 import android.widget.FrameLayout;
+import android.widget.Button;
 
 import java.util.Locale;
 
@@ -80,6 +81,11 @@ public class LocalChessActivity extends ChessActivity {
             // 5. Timer starten (nur weiß beginnt)
             startWhiteTimer();
         }
+
+        Button draw = findViewById(R.id.btn_offer_draw);
+        Button resign = findViewById(R.id.btn_resign_game);
+        if (draw != null) draw.setOnClickListener(v -> showDrawOfferOverlay());
+        if (resign != null) resign.setOnClickListener(v -> showResignConfirmOverlay());
     }
 
     // Converts a time control like "M" or "M|I"/"M+I" and stores increment
