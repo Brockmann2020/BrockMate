@@ -1,76 +1,32 @@
 package de.brockmann.chessinterface;
 
-import java.io.*;
+import com.github.bagaturchess.stockfish.engine.Stockfish;
 
 /**
- * Minimal wrapper to communicate with a Stockfish engine binary
- * via the UCI protocol.
+ * Wrapper around the Bagatur stockfish-android library.
  */
 public class StockfishClient {
-    private Process engine;
-    private BufferedReader reader;
-    private BufferedWriter writer;
+    private Stockfish engine;
 
     public boolean start() {
-        try {
-            engine = new ProcessBuilder("stockfish")
-                    .redirectErrorStream(true)
-                    .start();
-            reader = new BufferedReader(new InputStreamReader(engine.getInputStream()));
-            writer = new BufferedWriter(new OutputStreamWriter(engine.getOutputStream()));
-            sendCommand("uci");
-            waitForReady();
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
+        engine = new Stockfish();
+        return engine.startEngine();
     }
 
     public void stop() {
         if (engine != null) {
-            sendCommand("quit");
-            engine.destroy();
-        }
-    }
-
-    private void sendCommand(String cmd) {
-        try {
-            writer.write(cmd + "\n");
-            writer.flush();
-        } catch (IOException ignore) {
-        }
-    }
-
-    private void waitForReady() {
-        sendCommand("isready");
-        try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.equals("readyok")) break;
-            }
-        } catch (IOException ignore) {
+            engine.stopEngine();
         }
     }
 
     public void setElo(int elo) {
-        sendCommand("setoption name UCI_LimitStrength value true");
-        sendCommand("setoption name UCI_Elo value " + elo);
-        waitForReady();
+        engine.sendCommand("setoption name UCI_LimitStrength value true");
+        engine.sendCommand("setoption name UCI_Elo value " + elo);
+        engine.sendCommand("isready");
     }
 
     public String getBestMove(String fen, int movetimeMs) {
-        sendCommand("position fen " + fen);
-        sendCommand("go movetime " + movetimeMs);
-        try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("bestmove")) {
-                    String[] parts = line.split(" ");
-                    return parts.length > 1 ? parts[1] : null;
-                }
-            }
-        } catch (IOException ignore) {
-        }
-        return null;
+        engine.sendCommand("position fen " + fen);
+        return engine.goForBestMove(movetimeMs);
     }
 }
