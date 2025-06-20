@@ -3,6 +3,7 @@
     <style name="Base.Theme.ChessInterface" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="appLogo">@drawable/brock_mate_light_mode</item>
     </style>
 
     <style name="Theme.ChessInterface" parent="Base.Theme.ChessInterface" />
