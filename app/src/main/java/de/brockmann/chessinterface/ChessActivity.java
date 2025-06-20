@@ -720,13 +720,13 @@ public abstract class ChessActivity extends AppCompatActivity {
         }
     }
 
-    private void showGameEndOverlay(String message) {
+    protected void showGameEndOverlay(String message) {
         if (gameEndOverlay == null) return;
         gameEndMessage.setText(message);
         gameEndOverlay.setVisibility(View.VISIBLE);
     }
 
-    private void hideGameEndOverlay() {
+    protected void hideGameEndOverlay() {
         if (gameEndOverlay != null) {
             gameEndOverlay.setVisibility(View.GONE);
         }
