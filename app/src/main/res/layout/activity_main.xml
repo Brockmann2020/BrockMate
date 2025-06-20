@@ -24,4 +24,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="Analyse" />
+
+    <Button
+        android:id="@+id/btn_settings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Einstellungen" />
 </LinearLayout>
