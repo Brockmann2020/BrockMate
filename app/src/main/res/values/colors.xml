@@ -2,4 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Primary brand color used for buttons and accent elements -->
+    <color name="my_light_primary">#4CAF50</color>
 </resources>

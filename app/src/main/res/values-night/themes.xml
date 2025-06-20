@@ -2,7 +2,7 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.ChessInterface" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorPrimary">@color/my_dark_primary</item>
         <item name="appLogo">@drawable/brock_mate_dark_mode</item>
     </style>
 </resources>
