@@ -28,6 +28,18 @@ public class LocalChessActivity extends ChessActivity {
     private int incrementMillis;
     private TextView tvTop;
     private TextView tvBottom;
+    
+    private void onTimeExpired(boolean whiteExpired) {
+        if (whiteTimer != null) { whiteTimer.cancel(); }
+        if (blackTimer != null) { blackTimer.cancel(); }
+        whiteTimer = null;
+        blackTimer = null;
+        if (whiteExpired) {
+            showGameEndOverlay("Black won on time");
+        } else {
+            showGameEndOverlay("White won on time");
+        }
+    }
 
     @Override
     protected int getContentLayoutId() {
@@ -107,6 +119,7 @@ public class LocalChessActivity extends ChessActivity {
             @Override public void onFinish() {
                 whiteRemaining = 0;
                 tvBottom.setText("00:00");
+                onTimeExpired(true);
             }
         }.start();
     }
@@ -121,6 +134,7 @@ public class LocalChessActivity extends ChessActivity {
             @Override public void onFinish() {
                 blackRemaining = 0;
                 tvTop.setText("00:00");
+                onTimeExpired(false);
             }
         }.start();
     }
