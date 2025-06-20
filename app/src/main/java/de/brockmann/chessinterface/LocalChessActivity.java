@@ -20,6 +20,15 @@ public class LocalChessActivity extends ChessActivity {
     private String localPlayAction; // "flip_board" or "flip_pieces"
     private boolean isBoardFlipped = false;
 
+    // --- clock state ---
+    private CountDownTimer whiteTimer;
+    private CountDownTimer blackTimer;
+    private long whiteRemaining;
+    private long blackRemaining;
+    private int incrementMillis;
+    private TextView tvTop;
+    private TextView tvBottom;
+
     @Override
     protected int getContentLayoutId() {
         return R.layout.chess_local_activity;
@@ -33,35 +42,37 @@ public class LocalChessActivity extends ChessActivity {
         localPlayAction = getIntent().getStringExtra(MenuLocalActivity.EXTRA_LOCAL_ACTION);
         isBoardFlipped = false;
 
-        // 1. TimeControl-String holen
+        // 1. TimeControl-String holen und parsen
         String tc = getIntent().getStringExtra(EXTRA_TIME_CONTROL);
-        long initialMillis = parseTimeControlToMillis(tc);
+        long initialMillis = parseTimeControl(tc);
 
         // 2. Referenzen zu den beiden Clock-Includes
         View topInclude    = findViewById(R.id.clock_top);
         View bottomInclude = findViewById(R.id.clock_bottom);
 
         // 3. TextViews innerhalb der Inkludes (ID aus view_player_clock.xml)
-        TextView tvTop    = topInclude   .findViewById(R.id.tv_clock_time);
-        TextView tvBottom = bottomInclude.findViewById(R.id.tv_clock_time);
+        tvTop    = topInclude   .findViewById(R.id.tv_clock_time);
+        tvBottom = bottomInclude.findViewById(R.id.tv_clock_time);
 
         // 4. Starttext setzen bzw. "keine Zeitkontrolle"
         if (initialMillis < 0) {
             tvTop.setText("-:--");
             tvBottom.setText("-:--");
         } else {
+            whiteRemaining = initialMillis;
+            blackRemaining = initialMillis;
             String fmt = formatMillis(initialMillis);
             tvTop.setText(fmt);
             tvBottom.setText(fmt);
 
-            // 5. Timer starten (wenn nötig)
-            createTimer(initialMillis, tvTop).start();
-            createTimer(initialMillis, tvBottom).start();
+            // 5. Timer starten (nur weiß beginnt)
+            startWhiteTimer();
         }
     }
 
-    // Converts a time control like "M" or "M|I"/"M+I" to milliseconds
-    private long parseTimeControlToMillis(String tc) {
+    // Converts a time control like "M" or "M|I"/"M+I" and stores increment
+    private long parseTimeControl(String tc) {
+        incrementMillis = 0;
         if ("Keine Zeitkontrolle".equals(tc)) {
             return -1L;
         }
@@ -69,7 +80,11 @@ public class LocalChessActivity extends ChessActivity {
         String[] parts = tc.split("[+|]");
         try {
             int minutes = Integer.parseInt(parts[0]);
-            return minutes * 60L * 1000;
+            if (parts.length > 1) {
+                int inc = Integer.parseInt(parts[1]);
+                incrementMillis = inc * 1000;
+            }
+            return minutes * 60L * 1000L;
         } catch (NumberFormatException e) {
             return -1L;
         }
@@ -82,22 +97,54 @@ public class LocalChessActivity extends ChessActivity {
         return String.format(Locale.getDefault(), "%02d:%02d", m, s);
     }
 
-    private CountDownTimer createTimer(long millis, TextView tgt) {
-        return new CountDownTimer(millis, 1000) {
+    private void startWhiteTimer() {
+        if (whiteTimer != null) whiteTimer.cancel();
+        whiteTimer = new CountDownTimer(whiteRemaining, 1000) {
             @Override public void onTick(long ms) {
-                long m = (ms/1000) / 60;
-                long s = (ms/1000) % 60;
-                tgt.setText(String.format(Locale.getDefault(), "%02d:%02d", m, s));
+                whiteRemaining = ms;
+                tvBottom.setText(formatMillis(ms));
             }
             @Override public void onFinish() {
-                tgt.setText("00:00");
+                whiteRemaining = 0;
+                tvBottom.setText("00:00");
             }
-        };
+        }.start();
+    }
+
+    private void startBlackTimer() {
+        if (blackTimer != null) blackTimer.cancel();
+        blackTimer = new CountDownTimer(blackRemaining, 1000) {
+            @Override public void onTick(long ms) {
+                blackRemaining = ms;
+                tvTop.setText(formatMillis(ms));
+            }
+            @Override public void onFinish() {
+                blackRemaining = 0;
+                tvTop.setText("00:00");
+            }
+        }.start();
     }
 
     @Override
     protected void switchPlayer() {
-        toggleCurrentPlayer();
+        if (whiteTimer != null || blackTimer != null) {
+            char moved = currentPlayerTurn;
+            if (moved == 'W') {
+                if (whiteTimer != null) whiteTimer.cancel();
+                whiteRemaining += incrementMillis;
+            } else {
+                if (blackTimer != null) blackTimer.cancel();
+                blackRemaining += incrementMillis;
+            }
+            toggleCurrentPlayer();
+            if (currentPlayerTurn == 'W') {
+                startWhiteTimer();
+            } else {
+                startBlackTimer();
+            }
+        } else {
+            toggleCurrentPlayer();
+        }
 
         if (localPlayAction != null) {
             isBoardFlipped = !isBoardFlipped;
