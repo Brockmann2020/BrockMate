@@ -11,6 +11,8 @@ public class MenuAIActivity extends MenuActivity {
 
     public static final String EXTRA_AI_STRENGTH =
             "de.brockmann.chessinterface.EXTRA_AI_STRENGTH";
+    public static final String EXTRA_AI_COLOR =
+            "de.brockmann.chessinterface.EXTRA_AI_COLOR";
 
     @Override
     protected int getContentLayoutId() {
@@ -37,15 +39,16 @@ public class MenuAIActivity extends MenuActivity {
             @Override public void onStopTrackingTouch(SeekBar sb) {}
         });
 
-        // launch AI game with chosen strength
-        View.OnClickListener startListener = v -> {
-            int strength = 800 + seekBar.getProgress();
-            Intent intent = new Intent(this, AIChessActivity.class);
-            intent.putExtra(EXTRA_AI_STRENGTH, strength);
-            startActivity(intent);
-        };
+        whiteBtn.setOnClickListener(v -> startGame('W', seekBar.getProgress()));
+        blackBtn.setOnClickListener(v -> startGame('B', seekBar.getProgress()));
+    }
 
-        whiteBtn.setOnClickListener(startListener);
-        blackBtn.setOnClickListener(startListener);
+    private void startGame(char playerColor, int progress) {
+        int strength = 800 + progress;
+        Intent intent = new Intent(this, AIChessActivity.class);
+        intent.putExtra(EXTRA_AI_STRENGTH, strength);
+        char aiColor = playerColor == 'W' ? 'B' : 'W';
+        intent.putExtra(EXTRA_AI_COLOR, aiColor);
+        startActivity(intent);
     }
 }

@@ -7,11 +7,11 @@ import android.widget.ImageView;
 /**
  * Chess activity against the Stockfish engine.
  */
-public abstract class AIChessActivity extends ChessActivity {
+public class AIChessActivity extends ChessActivity {
 
     private StockfishClient engine;
     private int aiStrength;
-    private final char aiColor = 'B';
+    private char aiColor;
 
     @Override
     protected int getContentLayoutId() {
@@ -23,10 +23,16 @@ public abstract class AIChessActivity extends ChessActivity {
         super.onCreate(savedInstanceState);
 
         aiStrength = getIntent().getIntExtra(MenuAIActivity.EXTRA_AI_STRENGTH, 800);
+        aiColor = getIntent().getCharExtra(MenuAIActivity.EXTRA_AI_COLOR, 'B');
         engine = new StockfishClient();
         if (engine.start()) {
             engine.setElo(aiStrength);
         }
+        chessBoardGrid.post(() -> {
+            if (currentPlayerTurn == aiColor) {
+                makeAIMove();
+            }
+        });
     }
 
     @Override

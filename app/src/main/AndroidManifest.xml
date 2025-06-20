@@ -32,7 +32,7 @@
 
         <activity android:name=".AIChessActivity"
             android:exported="false"
-            android:label="Local Chess Game" >
+            android:label="AI Chess Game" >
         </activity>
 
         <activity android:name=".AnalysisChessActivity"
