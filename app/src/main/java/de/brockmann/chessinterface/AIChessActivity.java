@@ -27,12 +27,16 @@ public class AIChessActivity extends ChessActivity {
         engine = new StockfishClient();
         if (engine.start()) {
             engine.setElo(aiStrength);
+            chessBoardGrid.post(() -> {
+                if (currentPlayerTurn == aiColor) {
+                    makeAIMove();
+                }
+            });
+        } else {
+            engine = null;
+            android.widget.Toast.makeText(this,
+                    "Stockfish engine not available", android.widget.Toast.LENGTH_LONG).show();
         }
-        chessBoardGrid.post(() -> {
-            if (currentPlayerTurn == aiColor) {
-                makeAIMove();
-            }
-        });
     }
 
     @Override
@@ -44,12 +48,13 @@ public class AIChessActivity extends ChessActivity {
     @Override
     protected void switchPlayer() {
         toggleCurrentPlayer();
-        if (currentPlayerTurn == aiColor) {
+        if (engine != null && currentPlayerTurn == aiColor) {
             makeAIMove();
         }
     }
 
     private void makeAIMove() {
+        if (engine == null) return;
         new Thread(() -> {
             String fen = getFEN();
             String best = engine.getBestMove(fen, 1000);
