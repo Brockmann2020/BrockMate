@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
@@ -22,6 +23,8 @@ public abstract class ChessActivity extends AppCompatActivity {
 
     private static final int BOARD_SIZE = 8;
     protected GridLayout chessBoardGrid;
+    private View gameEndOverlay;
+    private TextView gameEndMessage;
 
     private final String[] initialBoardSetup = {
             "r", "n", "b", "q", "k", "b", "n", "r",
@@ -69,12 +72,28 @@ public abstract class ChessActivity extends AppCompatActivity {
         setContentView(layoutId);
 
         chessBoardGrid = findViewById(R.id.chess_board_grid);
+        gameEndOverlay = findViewById(R.id.game_end_overlay);
+        if (gameEndOverlay != null) {
+            gameEndMessage = gameEndOverlay.findViewById(R.id.tv_game_end_message);
+            Button newGame = gameEndOverlay.findViewById(R.id.btn_new_game);
+            Button mainMenu = gameEndOverlay.findViewById(R.id.btn_main_menu);
+            newGame.setOnClickListener(v -> {
+                initializeBoard();
+                hideGameEndOverlay();
+            });
+            mainMenu.setOnClickListener(v -> {
+                startActivity(new Intent(this, MainActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
+                finish();
+            });
+        }
         setupDummyButtons();
 
         chessBoardGrid.post(this::initializeBoard);
     }
 
     private void initializeBoard() {
+        hideGameEndOverlay();
         currentBoardState = initialBoardSetup.clone();
         // --- NEU: Startspieler festlegen ---
         currentPlayerTurn = 'W';
@@ -631,12 +650,12 @@ public abstract class ChessActivity extends AppCompatActivity {
         recordCurrentPosition();
 
         if (halfmoveClock >= 100) {
-            Toast.makeText(this, "Draw by 50-move rule!", Toast.LENGTH_LONG).show();
+            showGameEndOverlay("Draw by 50-move rule!");
             return;
         }
 
         if (positionCount.getOrDefault(getPositionKey(), 0) >= 3) {
-            Toast.makeText(this, "Draw by threefold repetition!", Toast.LENGTH_LONG).show();
+            showGameEndOverlay("Draw by threefold repetition!");
             return;
         }
 
@@ -645,9 +664,10 @@ public abstract class ChessActivity extends AppCompatActivity {
         boolean hasMove = hasAnyLegalMove(player);
         if (!hasMove) {
             if (inCheck) {
-                Toast.makeText(this, "Checkmate!", Toast.LENGTH_LONG).show();
+                String winner = (player == 'W') ? "Black" : "White";
+                showGameEndOverlay(winner + " won");
             } else {
-                Toast.makeText(this, "Stalemate!", Toast.LENGTH_LONG).show();
+                showGameEndOverlay("Stalemate!");
             }
         } else if (inCheck) {
             Toast.makeText(this, "Check!", Toast.LENGTH_SHORT).show();
@@ -697,6 +717,18 @@ public abstract class ChessActivity extends AppCompatActivity {
             case "Q": return R.drawable.ic_queen_white;
             case "K": return R.drawable.ic_king_white;
             default: return 0;
+        }
+    }
+
+    private void showGameEndOverlay(String message) {
+        if (gameEndOverlay == null) return;
+        gameEndMessage.setText(message);
+        gameEndOverlay.setVisibility(View.VISIBLE);
+    }
+
+    private void hideGameEndOverlay() {
+        if (gameEndOverlay != null) {
+            gameEndOverlay.setVisibility(View.GONE);
         }
     }
 
