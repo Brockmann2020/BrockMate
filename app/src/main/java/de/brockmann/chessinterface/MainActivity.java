@@ -28,5 +28,9 @@ public class MainActivity extends MenuActivity {
         findViewById(R.id.btn_analysis)
                 .setOnClickListener(v ->
                         startActivity(new Intent(this, AnalysisChessActivity.class)));
+
+        findViewById(R.id.btn_settings)
+                .setOnClickListener(v ->
+                        startActivity(new Intent(this, SettingsMenuActivity.class)));
     }
 }

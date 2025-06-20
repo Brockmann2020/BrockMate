@@ -4,6 +4,7 @@
     package="de.brockmann.chessinterface">
 
     <application
+        android:name=".ChessApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -47,6 +48,11 @@
         <activity android:name=".MenuAIActivity"
             android:exported="false"
             android:label="Local Chess Game" >
+        </activity>
+
+        <activity android:name=".SettingsMenuActivity"
+            android:exported="false"
+            android:label="Settings" >
         </activity>
 
         <activity
