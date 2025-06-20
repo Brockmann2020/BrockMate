@@ -10,6 +10,7 @@ public class StockfishClient {
     private Process engine;
     private BufferedReader reader;
     private BufferedWriter writer;
+    private boolean started;
 
     public boolean start() {
         try {
@@ -18,22 +19,24 @@ public class StockfishClient {
                     .start();
             reader = new BufferedReader(new InputStreamReader(engine.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(engine.getOutputStream()));
+            started = true;
             sendCommand("uci");
             waitForReady();
-            return true;
         } catch (IOException e) {
-            return false;
+            started = false;
         }
+        return started;
     }
 
     public void stop() {
-        if (engine != null) {
+        if (started && engine != null) {
             sendCommand("quit");
             engine.destroy();
         }
     }
 
     private void sendCommand(String cmd) {
+        if (!started) return;
         try {
             writer.write(cmd + "\n");
             writer.flush();
