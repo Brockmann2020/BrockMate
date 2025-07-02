@@ -34,11 +34,15 @@ public class AnalysisChessActivity extends ChessActivity {
         prev.setOnClickListener(v -> gotoPrevious());
         next.setOnClickListener(v -> gotoNext());
 
-        getWindow().getDecorView().post(() -> {
+        // Wait until the board is fully initialized before grabbing the
+        // starting position.  The base activity posts board setup on the
+        // GridLayout, so using the same queue ensures our code runs after it.
+        chessBoardGrid.post(() -> {
             history.clear();
             history.add(getFEN());
             historyIndex = 0;
             updateBestMove();
+        });dateBestMove();
         });
     }
 
