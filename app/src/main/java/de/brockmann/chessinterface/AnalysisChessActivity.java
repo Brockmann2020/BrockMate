@@ -25,13 +25,16 @@ public class AnalysisChessActivity extends ChessActivity {
         engine = new StockfishClient();
         engine.start();
         arrowView = findViewById(R.id.best_move_arrow);
+        if (arrowView != null) {
+            arrowView.bringToFront();
+        }
 
         Button prev = findViewById(R.id.btn_prev_move);
         Button next = findViewById(R.id.btn_next_move);
         prev.setOnClickListener(v -> gotoPrevious());
         next.setOnClickListener(v -> gotoNext());
 
-        chessBoardGrid.post(() -> {
+        getWindow().getDecorView().post(() -> {
             history.clear();
             history.add(getFEN());
             historyIndex = 0;
