@@ -14,6 +14,7 @@ import org.json.JSONObject;
  */
 public class StockfishClient {
     private static final String API_ENDPOINT = "https://stockfish.online/api/s/v2.php";
+    private final SimpleChessEngine fallback = new SimpleChessEngine();
 
     public boolean start() {
         // No initialization required for HTTP engine
@@ -59,8 +60,10 @@ public class StockfishClient {
             }
             connection.disconnect();
         } catch (Exception e) {
-            e.printStackTrace();
+            // ignore and fall back to local engine
         }
-        return null;
+
+        // if API call failed or returned nothing, use the lightweight engine
+        return fallback.bestMove(fen, 2);
     }
 }
