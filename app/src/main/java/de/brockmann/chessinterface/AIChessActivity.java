@@ -5,6 +5,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 /**
  * Chess activity against the Stockfish engine.
@@ -26,8 +27,14 @@ public class AIChessActivity extends ChessActivity {
 
         aiStrength = getIntent().getIntExtra(MenuAIActivity.EXTRA_AI_STRENGTH, 800);
         aiColor = getIntent().getCharExtra(MenuAIActivity.EXTRA_AI_COLOR, 'B');
-        engine = new StockfishClient();
-        engine.start();
+
+        if (hasInternetConnection()) {
+            engine = new StockfishClient();
+            engine.start();
+        } else {
+            engine = null;
+            Toast.makeText(this, R.string.no_internet, Toast.LENGTH_LONG).show();
+        }
 
         // only allow resignation in AI mode
         Button draw = findViewById(R.id.btn_offer_draw);
@@ -57,6 +64,7 @@ public class AIChessActivity extends ChessActivity {
     }
 
     private void makeAIMove() {
+        if (engine == null) return;
         new Thread(() -> {
             String fen = getFEN();
             int depth = 8 + (aiStrength - 800) / 200;

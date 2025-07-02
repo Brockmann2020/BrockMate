@@ -6,6 +6,12 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
+import android.os.Build;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.View;
@@ -859,5 +865,19 @@ public abstract class ChessActivity extends AppCompatActivity {
 
         setupBoardCells();
         placePiecesOnBoard();
+    }
+
+    protected boolean hasInternetConnection() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) return false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Network network = cm.getActiveNetwork();
+            if (network == null) return false;
+            NetworkCapabilities nc = cm.getNetworkCapabilities(network);
+            return nc != null && nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+        } else {
+            NetworkInfo ni = cm.getActiveNetworkInfo();
+            return ni != null && ni.isConnected();
+        }
     }
 }

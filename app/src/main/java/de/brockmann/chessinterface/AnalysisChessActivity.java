@@ -3,6 +3,7 @@ package de.brockmann.chessinterface;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +23,13 @@ public class AnalysisChessActivity extends ChessActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        engine = new StockfishClient();
-        engine.start();
+        if (hasInternetConnection()) {
+            engine = new StockfishClient();
+            engine.start();
+        } else {
+            engine = null;
+            Toast.makeText(this, R.string.no_internet, Toast.LENGTH_LONG).show();
+        }
         arrowView = findViewById(R.id.best_move_arrow);
         if (arrowView != null) {
             arrowView.bringToFront();
