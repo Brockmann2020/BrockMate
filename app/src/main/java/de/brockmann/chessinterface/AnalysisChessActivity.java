@@ -42,7 +42,6 @@ public class AnalysisChessActivity extends ChessActivity {
             history.add(getFEN());
             historyIndex = 0;
             updateBestMove();
-        });dateBestMove();
         });
     }
 
