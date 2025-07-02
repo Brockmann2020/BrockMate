@@ -25,9 +25,7 @@ public class AIChessActivity extends ChessActivity {
         aiStrength = getIntent().getIntExtra(MenuAIActivity.EXTRA_AI_STRENGTH, 800);
         aiColor = getIntent().getCharExtra(MenuAIActivity.EXTRA_AI_COLOR, 'B');
         engine = new StockfishClient();
-        if (engine.start()) {
-            engine.setElo(aiStrength);
-        }
+        engine.start();
         chessBoardGrid.post(() -> {
             if (currentPlayerTurn == aiColor) {
                 makeAIMove();
@@ -52,7 +50,8 @@ public class AIChessActivity extends ChessActivity {
     private void makeAIMove() {
         new Thread(() -> {
             String fen = getFEN();
-            String best = engine.getBestMove(fen, 1000);
+            int depth = 8 + (aiStrength - 800) / 200;
+            String best = engine.getBestMove(fen, depth);
             if (best == null || best.length() < 4) return;
             int from = algebraicToIndex(best.substring(0, 2));
             int to = algebraicToIndex(best.substring(2, 4));
