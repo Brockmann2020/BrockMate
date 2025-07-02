@@ -875,6 +875,7 @@ public abstract class ChessActivity extends AppCompatActivity {
             if (network == null) return false;
             NetworkCapabilities nc = cm.getNetworkCapabilities(network);
             return nc != null && nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+
         } else {
             NetworkInfo ni = cm.getActiveNetworkInfo();
             return ni != null && ni.isConnected();
