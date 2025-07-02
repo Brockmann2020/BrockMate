@@ -1,6 +1,8 @@
 package de.brockmann.chessinterface;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
@@ -26,6 +28,13 @@ public class AIChessActivity extends ChessActivity {
         aiColor = getIntent().getCharExtra(MenuAIActivity.EXTRA_AI_COLOR, 'B');
         engine = new StockfishClient();
         engine.start();
+
+        // only allow resignation in AI mode
+        Button draw = findViewById(R.id.btn_offer_draw);
+        if (draw != null) draw.setVisibility(View.GONE);
+        Button resign = findViewById(R.id.btn_resign_game);
+        if (resign != null) resign.setOnClickListener(v -> showResignConfirmOverlay());
+
         chessBoardGrid.post(() -> {
             if (currentPlayerTurn == aiColor) {
                 makeAIMove();
